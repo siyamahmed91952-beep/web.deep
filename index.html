@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Birthday Projector</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,Arial,sans-serif;background:#08090d;color:#fff}
+button,input,textarea{font:inherit}button{cursor:pointer}
+.hidden{display:none!important}
+:root{--line:#252832;--muted:#858b98;--yellow:#fcd535}
+.app{max-width:1180px;margin:auto;min-height:100vh;padding-bottom:90px}
+.header{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;border-bottom:1px solid var(--line);background:rgba(8,9,13,.88);backdrop-filter:blur(16px);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:800}
+.logo{width:31px;height:31px;border:1px solid #343843;border-radius:9px;display:grid;place-items:center;background:#11131a}
+.logo svg{width:17px;height:17px}
+.header-user{width:36px;height:36px;border:1px solid var(--line);background:#11131a;border-radius:50%;display:grid;place-items:center;color:#d9dce3}
+.page{display:none;animation:in .25s ease}.page.active{display:block}
+@keyframes in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.home,.profile{padding:28px 22px}
+.hero h1{margin:0 0 7px;font-size:31px;letter-spacing:-1.2px}.hero p{margin:0;color:var(--muted);font-size:14px}
+.section-title{display:flex;align-items:center;justify-content:space-between;margin:22px 0 13px}
+.section-title h2{margin:0;font-size:16px}.section-title span{color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.template-card{border:1px solid var(--line);border-radius:14px;background:linear-gradient(145deg,#11131a,#0d0f14);overflow:hidden;transition:.2s}
+.template-card:hover{border-color:#3a3e49;transform:translateY(-2px)}
+.template-preview{height:145px;background:#0a0b0f;overflow:hidden;position:relative}
+.template-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.template-placeholder{height:100%;display:grid;place-items:center;color:#676d79;font-size:12px}
+.template-info{padding:14px}.template-title{font-size:14px;font-weight:700}
+.template-desc{color:var(--muted);font-size:12px;line-height:1.5;margin-top:5px;min-height:35px}
+.template-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px}
+.price{color:var(--yellow);font-size:12px;font-weight:800}
+.btn{border:1px solid #343843;background:#171920;color:#fff;border-radius:9px;padding:9px 13px;font-size:12px;font-weight:700;transition:.18s;text-decoration:none;display:inline-block;text-align:center}
+.btn:hover{background:#20232c}
+.btn.primary{background:var(--yellow);color:#090a0d;border-color:var(--yellow)}
+.btn.full{width:100%}.btn:disabled{opacity:.7;cursor:default}
+.bottom-nav{position:fixed;left:50%;bottom:13px;transform:translateX(-50%);width:min(430px,calc(100% - 26px));height:60px;border:1px solid #292c35;background:rgba(14,16,22,.94);backdrop-filter:blur(18px);border-radius:16px;display:grid;grid-template-columns:1fr 1fr;z-index:50}
+.nav-btn{border:0;background:none;color:#777d89;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:10px;font-weight:700}
+.nav-btn svg{width:19px;height:19px}.nav-btn.active{color:#fff}
+.auth-wrap{min-height:100vh;display:grid;place-items:center;padding:20px}
+.auth-card{width:min(410px,100%);background:rgba(16,18,24,.95);border:1px solid var(--line);border-radius:18px;padding:25px}
+.auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:25px;font-size:19px;font-weight:800}
+.auth-card h1{margin:0 0 7px;font-size:24px}.auth-card p{margin:0 0 21px;color:var(--muted);font-size:13px}
+.auth-page{display:none}.auth-page.active{display:block}
+.field{margin-bottom:13px}.field label{display:block;color:#b7bbc5;font-size:11px;margin-bottom:6px;font-weight:700}
+.field-input{width:100%;height:44px;border:1px solid #292c35;border-radius:9px;background:#0c0e13;color:#fff;outline:none;padding:0 12px;font-size:13px}
+textarea.field-input{height:105px;padding-top:12px;resize:vertical}
+.field-input:focus{border-color:#555b69}
+.password-wrap{position:relative}.password-wrap input{padding-right:45px}
+.password-toggle{position:absolute;right:5px;top:5px;width:34px;height:34px;border:0;background:none;color:#8c929e;display:grid;place-items:center}
+.auth-switch{text-align:center;margin-top:16px;color:var(--muted);font-size:12px}
+.auth-switch button{border:0;background:none;color:var(--yellow);font-weight:700;padding:0}
+.error{color:#ff6b6b;font-size:11px;margin-top:8px;min-height:14px}
+.processing{display:inline-flex;gap:4px}
+.processing i{width:4px;height:4px;border-radius:50%;background:#111;animation:dot .8s infinite}
+.processing i:nth-child(2){animation-delay:.12s}.processing i:nth-child(3){animation-delay:.24s}.processing i:nth-child(4){animation-delay:.36s}
+@keyframes dot{0%,100%{opacity:.35}50%{opacity:1}}
+.profile-head{display:flex;align-items:center;gap:14px;padding:18px;border:1px solid var(--line);background:linear-gradient(145deg,#12141b,#0e1015);border-radius:15px}
+.avatar{width:58px;height:58px;border-radius:50%;border:1px solid #363a45;background:#181a22;display:grid;place-items:center;color:#dfe2e8}
+.profile-name{font-size:17px;font-weight:800}.profile-email{margin-top:4px;color:var(--muted);font-size:12px;word-break:break-all}
+.profile-section{margin-top:22px}.profile-section h2{font-size:14px;margin:0 0 10px}
+.profile-row{min-height:52px;display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);background:#101218;border-radius:11px;padding:10px 13px;margin-bottom:8px}
+.profile-row-left{display:flex;align-items:center;gap:10px}
+.profile-icon{width:31px;height:31px;border-radius:8px;border:1px solid #2c3039;display:grid;place-items:center;color:#aeb3bd}
+.profile-row strong{display:block;font-size:12px}.profile-row small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.logout{color:#ff7474;border-color:#42272b}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);z-index:100;display:grid;place-items:center;padding:16px}
+.modal-card{width:min(540px,100%);max-height:90vh;overflow:auto;border:1px solid #30343e;border-radius:17px;background:#101218}
+.modal-head{position:sticky;top:0;z-index:2;background:#101218;border-bottom:1px solid var(--line);padding:17px;display:flex;align-items:center;justify-content:space-between}
+.modal-head h2{margin:0;font-size:16px}.close{width:32px;height:32px;border:1px solid #2d3039;background:#161820;color:#aaa;border-radius:8px}
+.modal-body{padding:17px}.empty{border:1px dashed #2c3038;border-radius:13px;padding:35px 20px;text-align:center;color:#727885;font-size:12px;grid-column:1/-1}
+.projects-page{position:fixed;inset:0;z-index:90;background:#08090d;overflow:auto}
+.projects-inner{width:min(1050px,100%);min-height:100vh;margin:auto;padding-bottom:40px}
+.projects-header{height:70px;position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:14px;padding:0 20px;border-bottom:1px solid var(--line);background:rgba(8,9,13,.9);backdrop-filter:blur(18px)}
+.projects-back{width:37px;height:37px;border:1px solid #30343d;background:#11131a;color:#fff;border-radius:9px;display:grid;place-items:center}
+.projects-header h1{margin:0;font-size:18px}.projects-header p{margin:3px 0 0;color:var(--muted);font-size:11px}
+.projects-content{padding:25px 20px}.project-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.project-item{border:1px solid var(--line);background:linear-gradient(145deg,#11131a,#0e1015);border-radius:14px;padding:16px}
+.project-title{font-size:14px;font-weight:800}
+.project-number{color:#626875;font-size:10px}.project-code{margin-top:13px;border:1px solid #282c35;background:#0a0c10;border-radius:9px;padding:11px 12px;font-family:monospace;font-size:13px;letter-spacing:1.5px}
+.project-date{color:#737985;font-size:10px;margin-top:9px}.project-actions{display:flex;gap:8px;margin-top:13px}.project-actions .btn{flex:1}
+#toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:200;padding:11px 15px;border:1px solid #353944;background:#151820;color:#fff;border-radius:9px;font-size:11px}
+@media(max-width:650px){.grid,.project-list{grid-template-columns:1fr 1fr}.hero h1{font-size:27px}.home,.profile{padding-left:15px;padding-right:15px}}
+@media(max-width:470px){.grid,.project-list{grid-template-columns:1fr}.project-actions{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<div id="authRoot" class="auth-wrap">
+<div class="auth-card">
+<div class="auth-brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></div>Birthday Projector</div>
+<div id="loginPage" class="auth-page active">
+<h1>Welcome back</h1><p>Sign in to continue to your birthday projects.</p>
+<div class="field"><label>Email</label><input id="loginEmail" class="field-input" type="email" autocomplete="email"></div>
+<div class="field"><label>Password</label><div class="password-wrap"><input id="loginPassword" class="field-input" type="password"><button class="password-toggle" onclick="togglePassword('loginPassword',this)" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>
+<div id="loginError" class="error"></div>
+<button id="loginBtn" class="btn primary full" onclick="login()" type="button">Sign In</button>
+<div class="auth-switch">Don't have an account? <button onclick="showAuth('signup')" type="button">Create Account</button></div>
+</div>
+<div id="signupPage" class="auth-page">
+<h1>Create account</h1><p>Use one email to create one account.</p>
+<div class="field"><label>Name</label><input id="signupName" class="field-input" type="text"></div>
+<div class="field"><label>Email</label><input id="signupEmail" class="field-input" type="email"></div>
+<div class="field"><label>Password</label><div class="password-wrap"><input id="signupPassword" class="field-input" type="password"><button class="password-toggle" onclick="togglePassword('signupPassword',this)" type="button"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></div></div>
+<div class="field"><label>Confirm Password</label><input id="signupConfirm" class="field-input" type="password"></div>
+<div id="signupError" class="error"></div>
+<button id="signupBtn" class="btn primary full" onclick="signup()" type="button">Create Account</button>
+<div class="auth-switch">Already have an account? <button onclick="showAuth('login')" type="button">Sign In</button></div>
+</div>
+</div>
+</div>
+
+<div id="mainApp" class="app hidden">
+<header class="header">
+<div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/></svg></div>Birthday Projector</div>
+<button class="header-user" onclick="openProfile()" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4.1 3.2-6.3 7.5-6.3s6.8 2.2 7.5 6.3"/></svg></button>
+</header>
+<section id="homePage" class="page active"><div class="home">
+<div class="hero"><h1>Create a Birthday Website</h1><p>Choose a template and create your personalized birthday website.</p></div>
+<div class="section-title"><h2>Templates</h2><span id="templateCount"></span></div>
+<div id="projectGrid" class="grid"><div class="empty">Loading templates...</div></div>
+</div></section>
+<section id="profilePage" class="page"><div class="profile">
+<div class="profile-head"><div class="avatar"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4.1 3.2-6.3 7.5-6.3s6.8 2.2 7.5 6.3"/></svg></div><div><div id="profileName" class="profile-name">User</div><div id="profileEmail" class="profile-email"></div></div></div>
+<div class="profile-section"><h2>Account</h2>
+<div class="profile-row"><div class="profile-row-left"><div class="profile-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4.1 3.2-6.3 7.5-6.3s6.8 2.2 7.5 6.3"/></svg></div><div><strong>Profile Name</strong><small id="profileNameSmall">—</small></div></div></div>
+<div class="profile-row"><div class="profile-row-left"><div class="profile-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></div><div><strong>Email</strong><small id="profileEmailSmall">—</small></div></div></div>
+</div>
+<div class="profile-section"><h2>Projects</h2>
+<div class="profile-row" onclick="openMyProjects()" style="cursor:pointer"><div class="profile-row-left"><div class="profile-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h7M7 16h5"/></svg></div><div><strong>My Projects</strong><small>View all your birthday websites</small></div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></div>
+</div>
+<div class="profile-section"><button class="btn logout full" onclick="logout()" type="button">Sign Out</button></div>
+</div></section>
+<nav class="bottom-nav">
+<button id="navHome" class="nav-btn active" onclick="openHome()" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 11 9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Project</button>
+<button id="navProfile" class="nav-btn" onclick="openProfile()" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21c.7-4.1 3.2-6.3 7.5-6.3s6.8 2.2 7.5 6.3"/></svg>Profile</button>
+</nav>
+</div>
+
+<div id="builderModal" class="modal hidden"><div class="modal-card">
+<div class="modal-head"><h2 id="builderTitle">Create Project</h2><button class="close" onclick="closeModal()" type="button">×</button></div>
+<div class="modal-body"><div id="builderForm"></div><div style="margin-top:17px"><button id="generateBtn" class="btn primary full" onclick="generateProject()" type="button">Create Project</button></div></div>
+</div></div>
+
+<div id="projectsPage" class="projects-page hidden"><div class="projects-inner">
+<header class="projects-header"><button class="projects-back" onclick="closeMyProjects()" type="button"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6"/></svg></button><div><h1>My Projects</h1><p id="projectsSubtitle">All your birthday websites</p></div></header>
+<main class="projects-content"><div id="siteList" class="project-list"><div class="empty">Loading projects...</div></div></main>
+</div></div>
+
+<div id="toast" class="hidden"></div>
+
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import{getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,onAuthStateChanged,signOut,updateProfile}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import{getDatabase,ref,onValue,get,set,remove}from"https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig={apiKey:"AIzaSyBvVdYN2lR_QkKFUKkNaV-pDNmd_iMvjuU",authDomain:"ai-clander.firebaseapp.com",databaseURL:"https://ai-clander-default-rtdb.firebaseio.com",projectId:"ai-clander",storageBucket:"ai-clander.firebasestorage.app",messagingSenderId:"665358103880",appId:"1:665358103880:web:e0f989a0776526f5392f7d"};
+
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);
+let user=null,templates={},selectedTemplate=null,templateListener=null,projectListener=null;
+const $=id=>document.getElementById(id);
+window.$=$;
+const esc=x=>String(x??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+
+/* ═══════════════════════════════════════════════════════════
+   FIELD DEFINITIONS (English labels only)
+   ═══════════════════════════════════════════════════════════ */
+const FIELD_DEFS = {
+  name:{label:"Name",type:"text",placeholder:"e.g. Rahim"},
+  nickname:{label:"Nickname",type:"text"},
+  age:{label:"Age",type:"number",placeholder:"25"},
+  birthday:{label:"Birthday",type:"date"},
+  gender:{label:"Gender",type:"text"},
+  photo:{label:"Photo URL",type:"url"},
+  coverImage:{label:"Cover Image URL",type:"url"},
+  avatar:{label:"Avatar URL",type:"url"},
+  photo1:{label:"Photo 1",type:"url"},
+  photo2:{label:"Photo 2",type:"url"},
+  photo3:{label:"Photo 3",type:"url"},
+  photo4:{label:"Photo 4",type:"url"},
+  photo5:{label:"Photo 5",type:"url"},
+  message:{label:"Message",type:"textarea",placeholder:"Your birthday message..."},
+  wish:{label:"Wish",type:"textarea"},
+  quote:{label:"Quote",type:"text"},
+  from:{label:"From",type:"text"},
+  senderName:{label:"Sender Name",type:"text"},
+  senderEmail:{label:"Sender Email",type:"email"},
+  music:{label:"Music URL (MP3)",type:"url"},
+  video:{label:"Video URL",type:"url"},
+  themeColor:{label:"Theme Color",type:"text",placeholder:"#fcd535"},
+  bgColor:{label:"Background Color",type:"text",placeholder:"#08090d"},
+  textColor:{label:"Text Color",type:"text",placeholder:"#ffffff"},
+  font:{label:"Font Family",type:"text",placeholder:"Poppins"},
+  fontSize:{label:"Font Size",type:"number",placeholder:"18"},
+  partyDate:{label:"Party Date",type:"date"},
+  partyTime:{label:"Party Time",type:"text",placeholder:"7:00 PM"},
+  venue:{label:"Venue",type:"text"},
+  address:{label:"Address",type:"textarea"},
+  mapLink:{label:"Map Link",type:"url"},
+  rsvpLink:{label:"RSVP Link",type:"url"},
+  phone:{label:"Phone",type:"text"},
+  email:{label:"Email",type:"email"},
+  whatsapp:{label:"WhatsApp",type:"text"},
+  facebook:{label:"Facebook URL",type:"url"},
+  instagram:{label:"Instagram URL",type:"url"},
+  countdownDate:{label:"Countdown Date",type:"date"},
+  countdownTitle:{label:"Countdown Title",type:"text"},
+  confetti:{label:"Confetti (true/false)",type:"text",placeholder:"true"},
+  balloons:{label:"Balloons (true/false)",type:"text",placeholder:"true"},
+  autoMusic:{label:"Auto Music (true/false)",type:"text",placeholder:"false"},
+  cake:{label:"Cake Image URL",type:"url"},
+  giftMessage:{label:"Gift Message",type:"textarea"},
+  hobby:{label:"Hobby",type:"text"},
+  favoriteColor:{label:"Favorite Color",type:"text"},
+  favoriteFood:{label:"Favorite Food",type:"text"},
+  dream:{label:"Dream",type:"textarea"},
+  memory:{label:"Memory",type:"textarea"},
+  specialNote:{label:"Special Note",type:"textarea"}
+};
+
+/* ═══════════════════════════════════════════════════════════
+   URL HELPERS — path-based link + parsing
+   ═══════════════════════════════════════════════════════════ */
+function buildSiteUrl(code){
+  const base = location.origin + location.pathname.replace(/\/[^/]*$/, "/");
+  return base + code + "/";
+}
+
+function getSiteCodeFromUrl(){
+  const params = new URLSearchParams(location.search);
+  if(params.get("site")) return params.get("site");
+  const path = location.pathname.replace(/\/+$/,"").split("/").pop();
+  if(path && /^[a-z0-9]{8}$/i.test(path) && !path.includes(".")) return path.toLowerCase();
+  return null;
+}
+
+/* ═══════════════════════════════════════════════════════════ */
+
+function pretty(x){return String(x).replace(/[_-]+/g," ").replace(/([a-z])([A-Z])/g,"$1 $2").replace(/\b\w/g,a=>a.toUpperCase())}
+function toast(x){let t=$("toast");t.textContent=x;t.classList.remove("hidden");clearTimeout(window.tt);window.tt=setTimeout(()=>t.classList.add("hidden"),2500)}
+function process(b,on){if(on){b.dataset.old=b.innerHTML;b.disabled=true;b.innerHTML='<span class="processing"><i></i><i></i><i></i><i></i></span>'}else{b.disabled=false;b.innerHTML=b.dataset.old||"Continue"}}
+function friendly(c){return({"auth/invalid-credential":"Invalid email or password.","auth/email-already-in-use":"This email is already registered.","auth/invalid-email":"Invalid email address.","auth/weak-password":"Password must be at least 6 characters.","auth/too-many-requests":"Too many attempts."})[c]||"Something went wrong."}
+
+window.showAuth=t=>{$("loginPage").classList.toggle("active",t==="login");$("signupPage").classList.toggle("active",t==="signup");$("loginError").textContent="";$("signupError").textContent=""};
+window.togglePassword=(id,b)=>{let x=$(id);x.type=x.type==="password"?"text":"password";b.style.color=x.type==="text"?"#fff":""};
+
+window.login=async()=>{let e=$("loginEmail").value.trim(),p=$("loginPassword").value,b=$("loginBtn");$("loginError").textContent="";if(!e)return $("loginError").textContent="Please enter email.";if(!p)return $("loginError").textContent="Please enter password.";process(b,true);try{await signInWithEmailAndPassword(auth,e,p)}catch(x){process(b,false);$("loginError").textContent=friendly(x.code)}};
+
+window.signup=async()=>{let n=$("signupName").value.trim(),e=$("signupEmail").value.trim().toLowerCase(),p=$("signupPassword").value,c=$("signupConfirm").value,b=$("signupBtn");$("signupError").textContent="";if(!n)return $("signupError").textContent="Please enter name.";if(!e)return $("signupError").textContent="Please enter email.";if(p.length<6)return $("signupError").textContent="Password must be 6+ characters.";if(p!==c)return $("signupError").textContent="Passwords do not match.";process(b,true);try{let q=await createUserWithEmailAndPassword(auth,e,p);await updateProfile(q.user,{displayName:n});await set(ref(db,"users/"+q.user.uid),{name:n,email:e,createdAt:Date.now()})}catch(x){process(b,false);$("signupError").textContent=friendly(x.code)}};
+
+onAuthStateChanged(auth,async u=>{user=u;if(u){$("authRoot").classList.add("hidden");$("mainApp").classList.remove("hidden");await loadProfile();loadTemplates()}else{$("authRoot").classList.add("hidden");$("mainApp").classList.add("hidden");if(projectListener){projectListener();projectListener=null}}});
+
+async function loadProfile(){if(!user)return;let name=user.displayName||"";try{let s=await get(ref(db,"users/"+user.uid));if(s.exists()&&s.val().name)name=name||s.val().name}catch(e){}name=name||"User";$("profileName").textContent=name;$("profileNameSmall").textContent=name;$("profileEmail").textContent=user.email||"";$("profileEmailSmall").textContent=user.email||""}
+
+window.openHome=()=>{$("homePage").classList.add("active");$("profilePage").classList.remove("active");$("navHome").classList.add("active");$("navProfile").classList.remove("active")};
+window.openProfile=()=>{$("homePage").classList.remove("active");$("profilePage").classList.add("active");$("navHome").classList.remove("active");$("navProfile").classList.add("active");loadProfile()};
+
+function loadTemplates(){if(templateListener)templateListener();templateListener=onValue(ref(db,"templates"),s=>{templates=s.val()||{};let a=Object.entries(templates).filter(([i,t])=>t&&t.published!==false);$("templateCount").textContent=a.length+" templates";$("projectGrid").innerHTML=a.length?a.map(([i,t])=>card(i,t)).join(""):'<div class="empty">No templates available.</div>'})}
+
+function card(id,t){return`<article class="template-card"><div class="template-preview">${t.previewImage?`<img src="${esc(t.previewImage)}" alt="">`:'<div class="template-placeholder">Preview</div>'}</div><div class="template-info"><div class="template-title">${esc(t.title||"Birthday Template")}</div><div class="template-desc">${esc(t.description||"Create your birthday website.")}</div><div class="template-bottom"><span class="price">${Number(t.price||0)>0?"$"+t.price:"FREE"}</span><button class="btn primary" onclick="chooseTemplate('${esc(id)}')" type="button">Use Template</button></div></div></article>`}
+
+/* টাইপ অনুযায়ী input tag */
+function inputTag(key, def){
+  const type = def.type || "text";
+  const placeholder = def.placeholder || "";
+  if(type === "textarea"){
+    return `<textarea class="field-input variable" data-key="${esc(key)}" placeholder="${esc(placeholder)}"></textarea>`;
+  }
+  const inputType = ["date","number","url","email","tel"].includes(type) ? type : "text";
+  return `<input class="field-input variable" data-key="${esc(key)}" type="${inputType}" placeholder="${esc(placeholder)}">`;
+}
+
+function extractVars(html){
+  return [...new Set([...String(html||"").matchAll(/{{\s*([a-zA-Z0-9_-]+)\s*}}/g)].map(m=>m[1]))];
+}
+
+window.chooseTemplate=id=>{
+  let t=templates[id];if(!t)return;
+  if(Number(t.price||0)>0)return toast("Paid templates are disabled.");
+  selectedTemplate={id,...t};
+  let keys = extractVars(t.html);
+  if(!keys.length){toast("This template has no editable fields.");return;}
+  let fields = keys.map(k=>({key:k, ...(FIELD_DEFS[k] || {label: pretty(k), type:"text"})}));
+  selectedTemplate._fields = fields;
+  buildForm();
+  $("builderModal").classList.remove("hidden");
+};
+
+function buildForm(){
+  $("builderTitle").textContent = "Create: " + (selectedTemplate.title||"Project");
+  let f = selectedTemplate._fields || [];
+  $("builderForm").innerHTML = f.map(x=>`<div class="field"><label>${esc(x.label)}</label>${inputTag(x.key, x)}</div>`).join("");
+}
+
+window.closeModal=()=>{$("builderModal").classList.add("hidden");selectedTemplate=null};
+
+window.generateProject=async()=>{
+  if(!user||!selectedTemplate)return;
+  let b=$("generateBtn"), data={};
+  for(let x of document.querySelectorAll(".variable")){
+    let val = x.value.trim();
+    let key = x.dataset.key;
+    if(!val){
+      x.focus();
+      return toast("Please fill: " + (selectedTemplate._fields.find(f=>f.key===key)?.label || key));
+    }
+    data[key] = val;
+  }
+  process(b,true);
+  try{
+    let code = await uniqueCode();
+    let created = Date.now();
+    let finalHtml = render(selectedTemplate.html||"", data);
+    let site = {
+      uid: user.uid,
+      userEmail: user.email||"",
+      userName: user.displayName||"",
+      templateId: selectedTemplate.id,
+      templateTitle: selectedTemplate.title||"",
+      values: data,
+      html: finalHtml,
+      css: selectedTemplate.css||"",
+      js: selectedTemplate.js||"",
+      code,
+      createdAt: created,
+      published: true
+    };
+    await set(ref(db,"sites/"+code), site);
+    await set(ref(db,"users/"+user.uid+"/projects/"+code),{
+      code,
+      title: selectedTemplate.title||"Birthday Project",
+      templateId: selectedTemplate.id,
+      createdAt: created,
+      published: true
+    });
+    closeModal();
+    toast("Project created: " + code);
+    openMyProjects();
+  }catch(e){
+    console.error(e);
+    toast("Could not create project.");
+  }finally{process(b,false)}
+};
+
+/* ═══════════════════════════════════════════════════════════
+   🔥 UNIQUE CODE — ৮ ডিজিট, ছোট হাতের অক্ষর + সংখ্যা
+   উদাহরণ: scv23sc1, a7b9x2k4
+   ═══════════════════════════════════════════════════════════ */
+async function uniqueCode(){
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  for(let n=0; n<15; n++){
+    let c = "";
+    for(let i=0; i<8; i++) c += chars[Math.floor(Math.random()*chars.length)];
+    /* প্রথম অক্ষর অবশ্যই অক্ষর হবে (সংখ্যা হলে আবার চেষ্টা) */
+    if(/^[a-z]/.test(c) && !(await get(ref(db,"sites/"+c))).exists()) return c;
+  }
+  throw Error("Code generation failed");
+}
+
+function render(html,data){
+  return String(html).replace(/{{\s*([a-zA-Z0-9_-]+)\s*}}/g,(m,k)=>esc(data[k]??""));
+}
+
+window.openMyProjects=()=>{
+  if(!user)return;
+  $("projectsPage").classList.remove("hidden");
+  if(projectListener)projectListener();
+  $("siteList").innerHTML='<div class="empty">Loading...</div>';
+  projectListener=onValue(ref(db,"users/"+user.uid+"/projects"),s=>{
+    let a=Object.values(s.val()||{}).filter(Boolean).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    $("projectsSubtitle").textContent=a.length+" projects";
+    $("siteList").innerHTML=a.length?a.map((p,i)=>{
+      let code=String(p.code||"");
+      let url=buildSiteUrl(code);
+      let date=p.createdAt?new Date(p.createdAt).toLocaleString():"";
+      return`<article class="project-item">
+        <div class="project-title">${esc(p.title||"Birthday Project")}</div>
+        <div class="project-number">#${i+1}</div>
+        <div class="project-code">${esc(code)}</div>
+        ${date?`<div class="project-date">${esc(date)}</div>`:""}
+        <div class="project-actions">
+          <a class="btn primary" href="${esc(url)}" target="_blank" rel="noopener">Open</a>
+          <button class="btn" onclick="copyProjectLink('${esc(code)}')" type="button">Copy Link</button>
+          <button class="btn" onclick="deleteProject('${esc(code)}')" type="button" style="color:#ff7474">Delete</button>
+        </div>
+      </article>`;
+    }).join(""):'<div class="empty">No projects yet.</div>';
+  });
+};
+
+window.closeMyProjects=()=>{if(projectListener){projectListener();projectListener=null}$("projectsPage").classList.add("hidden")};
+
+window.deleteProject=async code=>{
+  if(!confirm("Delete this project?"))return;
+  try{
+    await remove(ref(db,"sites/"+code));
+    await remove(ref(db,"users/"+user.uid+"/projects/"+code));
+    toast("Project deleted.");
+  }catch(e){toast("Delete failed.")}
+};
+
+/* ═══════════════════════════════════════════════════════════
+   🔥 AUTO COPY — ক্লিক করলেই লিংক কপি হয়ে যাবে
+   ═══════════════════════════════════════════════════════════ */
+window.copyProjectLink = async code => {
+  const url = buildSiteUrl(code);
+  try{
+    await navigator.clipboard.writeText(url);
+    toast("Link copied: " + url);
+  }catch(e){
+    /* Fallback for old browsers / non-HTTPS */
+    const ta = document.createElement("textarea");
+    ta.value = url;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try{
+      document.execCommand("copy");
+      toast("Link copied: " + url);
+    }catch(err){
+      prompt("Copy this link:", url);
+    }
+    ta.remove();
+  }
+};
+
+window.logout=async()=>{if(projectListener){projectListener();projectListener=null}await signOut(auth)};
+
+/* ═══════════════════════════════════════════════════════════
+   SITE VIEWER — path-based URL সমর্থন করে
+   উদাহরণ: https://mydomain/scv23sc1/
+   ═══════════════════════════════════════════════════════════ */
+const siteCode = getSiteCodeFromUrl();
+if(siteCode){
+  $("authRoot").classList.add("hidden");
+  $("mainApp").classList.add("hidden");
+  onValue(ref(db,"sites/"+siteCode),s=>{
+    let x=s.val();
+    if(!x||x.published===false){
+      document.body.innerHTML=`<div style="min-height:100vh;display:grid;place-items:center;background:#08090d;color:white;font-family:Arial;text-align:center"><div><h2>${x?"Project unavailable":"Project not found"}</h2><p style="color:#777">This birthday website is not available.</p></div></div>`;
+      return;
+    }
+    let h=String(x.html||""),css=String(x.css||""),js=String(x.js||"");
+    if(/<\/head>/i.test(h))h=h.replace(/<\/head>/i,"<style>"+css+"</style></head>");else h="<style>"+css+"</style>"+h;
+    if(/<\/body>/i.test(h))h=h.replace(/<\/body>/i,"<script>"+js+"<\/script></body>");else h+="<script>"+js+"<\/script>";
+    document.open();document.write(h);document.close();
+  });
+}
+</script>
+</body>
+</html>
